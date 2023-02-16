@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Work Sans',
+    monospace;
+}
+
+.button_glow {
+  background-color: #ffffff;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
+  color: #eeeeee;
+  cursor: pointer;
+  display: inline-block;
+  font-family: sans-serif;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+}
+@keyframes glowing {
+  0% {
+    background-color: #8AA814;
+    box-shadow: 0 0 5px #8AA814;
+  }
+  50% {
+    background-color: #BEE719;
+    box-shadow: 0 0 20px #BEE719;
+  }
+  100% {
+    background-color: #8AA814;
+    box-shadow: 0 0 5px #8AA814;
+  }
+}
+.button_glow {
+  animation: glowing 3000ms infinite;
+}
