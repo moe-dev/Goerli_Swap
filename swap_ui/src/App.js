@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Swap from "./pages/swap";
+import Swap from "./public/swap";
 export default function App() {
   return (
     <BrowserRouter>

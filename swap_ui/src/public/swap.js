@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
-import PulseLoader from "react-spinners/PulseLoader";
 import Web3 from 'web3';
 import * as ethers from "ethers";
-import { styled } from "@mui/material/styles";
 import logo from './images/logo.png'; // Tell webpack this JS file uses this image
 import swapsr from './images/swap_sr.svg'
 import ETH from './images/ETH.svg'; // Tell webpack this JS file uses this image
-import { Link } from "react-router-dom";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {Tooltip} from '@mui/material';
-import bgimg from './images/bg.png';
 import TextField from '@mui/material/TextField';
 import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json'
 import Quoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
@@ -17,50 +11,11 @@ import {Pool,Route,Trade,SwapRouter} from '@uniswap/v3-sdk'
 import {
   CurrencyAmount,
   Percent,
-  Token,
   TradeType,
 } from '@uniswap/sdk-core'
-
-const WETH = new Token(
-  5,
-  '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
-  18,
-  'WETH',
-  'Wrapped Ether'
-);
-const TEST_TOKEN = new Token(
-  5,
-  '0x168dF3992A8f7d33559a79321Caccb1e6fd86e54',
-  2,
-  'TEST_TOKEN',
-  'TEST_TOKEN'
-);
-const POOL_CONTRACT_ADDRESS = "0xEE42144D42F8905349036F14e419635De62488de"
-const QUOTER_CONTRACT_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
-const SWAP_ROUTER_ADDRESS = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
-const MAX_FEE_PER_GAS = 100000000000
-const MAX_PRIORITY_FEE_PER_GAS = 100000000000
-const TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER = 200000000
-const GET_ALLOWANCE_ABI = new ethers.utils.Interface([
-  'function allowance(address owner, address spender) view returns (uint256)',
-]);
-const ERC20_ABI = [
-  // Read-Only Functions
-  'function balanceOf(address owner) view returns (uint256)',
-  'function decimals() view returns (uint8)',
-  'function symbol() view returns (string)',
-
-  // Authenticated Functions
-  'function transfer(address to, uint amount) returns (bool)',
-  'function approve(address _spender, uint256 _value) returns (bool)',
-
-  // Events
-  'event Transfer(address indexed from, address indexed to, uint amount)',
-]
-// const ABI = [
-//   "function balanceOf(address) view returns (uint256)",
-// ];
-
+import PulseLoader from "react-spinners/PulseLoader";
+import {WETH,TEST_TOKEN, POOL_CONTRACT_ADDRESS, QUOTER_CONTRACT_ADDRESS, SWAP_ROUTER_ADDRESS, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS,
+  TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER, GET_ALLOWANCE_ABI, ERC20_ABI } from './constants'
 
 export default function Swap() {
   const [account, setAccount] = useState();
@@ -196,13 +151,9 @@ export default function Swap() {
     }
   };
 
-  const onMaxClick = (token) => {
-    let gasMoney = 0;
-    if (token === WETH) {
-      gasMoney = 0.025;
-    }
+  const onMaxClick = () => {
     handleChangeSend(
-      (formatTokenDecimals(balanceSend)-gasMoney).toString()
+      (formatTokenDecimals(balanceSend)).toString()
     );
   };
   
@@ -303,12 +254,9 @@ export default function Swap() {
       IUniswapV3PoolABI.abi,
       provider
     )
-    const [token0, token1, fee, tickSpacing, liquidity, slot0] =
+    const [fee, liquidity, slot0] =
     await Promise.all([
-      poolContract.token0(),
-      poolContract.token1(),
       poolContract.fee(),
-      poolContract.tickSpacing(),
       poolContract.liquidity(),
       poolContract.slot0(),
     ])
@@ -358,7 +306,16 @@ export default function Swap() {
       maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
     }
     const signer = provider.getSigner()
-    const res = await signer.sendTransaction(tx)
+    try{
+      setIsSigning(true)
+      const res = await signer.sendTransaction(tx)
+      console.log(res)
+    }
+    catch(e){
+      setIsSigning(false)
+      throw new Error(e)
+    }
+    setIsSigning(false)
   }
 
   window.ethereum.on('connect', function (connectInfo) {
@@ -380,7 +337,6 @@ export default function Swap() {
   })
  return (
     <div className="max-h-screen items-center">
-
       <header className="w-full py-2 flex items-center justify-between spacex-3 px-6 border-b-[1px] border-gray-600">
       <img
       src={logo}
@@ -418,10 +374,17 @@ export default function Swap() {
 }
       </header>
 
-
       <div className="flex-1 flex flex-col overflow-y-auto px-4 gap-4 my-2">
         <div className="flex justify-center items-center text-white relative mt-0.5" />
         <center>
+
+        {isSigning ?            <div className = "flex mt-[40vh] justify-center items-center"><PulseLoader
+        color={"#BEE719"}
+        loading={true}
+        size={25}
+        aria-label="Loading Spinner"
+        data-testid="loader"
+      /> </div>:
         <div className="w-1/2 mt-4">
           <div className="">
             <div className="flex justify-between text-slate-400" />
@@ -453,7 +416,7 @@ export default function Swap() {
                         <div className="pt-2 text-sm">
                           <button
                             className="text-[#BEE719]"
-                            onClick={() => onMaxClick(selectedSendToken.symbol)}
+                            onClick={() => onMaxClick()}
                           >
                             Balance:&nbsp;
                             {formatTokenDecimals(balanceSend)}
@@ -513,8 +476,10 @@ export default function Swap() {
               
             </div>
           </div>
+          
         </div>
-        { isConnected && selectedSendAmount > 0 &&
+}
+        { isConnected && selectedSendAmount > 0 && !isSigning &&
         <button
           onClick = {handleSubmit}
           className="w-1/2 mt-6 bg-[#BEE719]	px-4 py-2 rounded-lg font-semibold"
@@ -524,7 +489,7 @@ export default function Swap() {
 }
         </center>
     </div>
-    
+
     </div>
   );
 
